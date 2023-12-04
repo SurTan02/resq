@@ -78,3 +78,25 @@ export const updateFood =async (req: Request, res: Response) => {
 // getFoods by restaurant
 // getFood by id
 // deleteFood
+
+export const searchFoodsByName = async (req: Request, res: Response) => {
+    const name = req.params.food_name;
+
+    const query = `
+        SELECT * 
+        FROM food 
+        WHERE name LIKE ?
+    `;
+
+    try {
+        const [rows] = await pool.query(query, [`%${name}%`]);
+
+        res.status(200).json({
+            "message": "Success",
+            "data": rows
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Error in query" });
+    }
+};

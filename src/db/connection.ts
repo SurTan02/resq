@@ -46,7 +46,7 @@ export const migration = async () => {
                 price decimal(10,2) not null,
                 restaurant_id char(36) not null,
                 primary key (id),
-                foreign key (restaurant_id) references restaurants(id)
+                foreign key (restaurant_id) references restaurant(id)
             )
         `
         );
