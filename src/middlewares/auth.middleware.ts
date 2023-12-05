@@ -1,18 +1,22 @@
-import { type Request, type Response, type NextFunction } from "express";
+import { Request, Response, NextFunction } from "express";
+import { verify } from "jsonwebtoken";
 
-// TODO
-export const checkFirebaseToken = (req: Request, res: Response, next: NextFunction) => {
-    const token = req.headers.authorization;
-    if (token == null) {
-        return res.status(401).send("No token provided");
-    }
+export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1]; // Bearer TOKEN
 
-    admin.auth().verifyIdToken(token)
-        .then((decodedToken) => {
-            req.user = decodedToken;
+    if (!token) return res.sendStatus(401); // No token provided
+
+    try {
+        verify(token, process.env.JWT_SECRET!, (err, user) => {
+            if (err) return res.sendStatus(403);
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            req.user = user;
+            console.log(user);
             next();
-        })
-        .catch(() => {
-            res.status(403).send("Unauthorized");
         });
+    } catch (error) {
+        res.sendStatus(403); // Invalid token
+    }
 };
