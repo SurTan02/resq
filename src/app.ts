@@ -1,5 +1,4 @@
 import express from "express";
-import * as admin from "firebase-admin";
 import { init, migration } from "./db/connection";
 import router from "./routes/routes";
 import "dotenv/config";
@@ -7,10 +6,6 @@ import "dotenv/config";
 const app = express();
 const port = process.env.PORT;
 
-// Initialize Firebase Admin SDK
-admin.initializeApp({
-    credential: admin.credential.cert(require("./env/credential.json")),
-});
 
 app.use(express.json());
 
