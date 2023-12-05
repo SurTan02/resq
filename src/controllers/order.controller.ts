@@ -105,3 +105,70 @@ export const placeOrder = async (req: Request, res: Response) => {
         res.status(500).send({ message: "Error placing order to the database" });
     }
 };
+
+export const updateOrder = async (req: Request, res: Response) => {
+    const { order_id, status } = req.body;
+    try {
+        await pool.query(
+            `
+                INSERT INTO order_history
+                SELECT *, ? AS status
+                FROM orders
+                WHERE id = ?
+            `,
+            [status, order_id]
+        );
+        await pool.query(
+            `
+                DELETE FROM orders
+                WHERE id = ?
+            `,
+            [order_id]
+        );
+        res.status(201).json({
+            "message": "Order updated successfully"
+        });
+    } catch (error) {
+        console.error("Error updating order:", error);
+        res.status(500).send({ message: "Error updating order to the database" });
+    }
+};
+
+export const getAllOrderHistory = async (req: Request, res: Response) => {
+    try {
+        const [rows] = await pool.query(
+            `
+                SELECT * 
+                FROM order_history
+            `
+        );
+        res.status(200).json({
+            "message": "Success",
+            "data": rows
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Error in query" });
+    }
+};
+
+export const getOrderHistory = async (req: Request, res: Response) => {
+    try {
+        const userId = req.params.user_id;
+        const [rows] = await pool.query(
+            `
+                SELECT * 
+                FROM order_history
+                WHERE user_id = ?
+            `,
+            [userId]
+        );
+        res.status(200).json({
+            "message": "Success",
+            "data": rows
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Error in query" });
+    }
+};
