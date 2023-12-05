@@ -8,6 +8,9 @@ export interface Food {
     name: string;
     description: string;
     price: number;
+    discount_price: number;
+    quantity: string;
+    image: string;
     restaurant_id: string;
 }
 
@@ -26,19 +29,19 @@ export const getFoods = async (req: Request, res: Response) => {
 
 export const createFood = async (req: Request, res: Response) => {
     const id = uuidv4();
-    const { name, description, price, restaurant_id }: Food = req.body;
+    const { name, description, price, discount_price, quantity, image, restaurant_id }: Food = req.body;
 
     const query = `
-        INSERT INTO food (id, name, description, price, restaurant_id) 
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO food (id, name, description, price, discount_price, quantity, image, restaurant_id) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     try {
-        await pool.query(query, [id, name, description, price, restaurant_id]);
+        await pool.query(query, [id, name, description, price, discount_price, quantity, image, restaurant_id]);
         res.status(201).json({
             message: "Food added successfully",
             data: {
-                id, name, description, price, restaurant_id
+                id, name, description, price, discount_price, quantity, image, restaurant_id
             }
         });
     } catch (error) {
