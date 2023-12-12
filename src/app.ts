@@ -1,5 +1,5 @@
 import express from "express";
-import { init, migration } from "./db/connection";
+import { init } from "./db/connection";
 import router from "./routes/routes";
 import "dotenv/config";
 
@@ -14,7 +14,7 @@ app.use("/api/v1", router);
 
 const run = async () =>{
     init();
-    await migration();
+    // await migration();
     app.listen(port, () => {
         console.log(`Server running on port http://localhost:${port}`);
     });
