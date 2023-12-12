@@ -25,7 +25,7 @@ export const migration = async () => {
     try {
         await pool.query(
             `
-            CREATE TABLE IF NOT EXISTS user (
+            CREATE TABLE IF NOT EXISTS USER (
                 id char(36) not null,
                 name varchar(255) not null,
                 email varchar(255) not null unique,
@@ -38,7 +38,7 @@ export const migration = async () => {
         // table Restaurant
         await pool.query(
             `
-            CREATE TABLE IF NOT EXISTS restaurant (
+            CREATE TABLE IF NOT EXISTS RESTAURANT (
                 id char(36) not null,
                 name varchar(255) not null,
                 address varchar(255) not null,
@@ -51,7 +51,7 @@ export const migration = async () => {
         // table Food
         await pool.query(
             `
-            CREATE TABLE IF NOT EXISTS food (
+            CREATE TABLE IF NOT EXISTS FOOD (
                 id char(36) not null,
                 name varchar(255) not null,
                 description text not null,
@@ -61,7 +61,7 @@ export const migration = async () => {
                 image varchar(255) not null,
                 restaurant_id char(36) not null,
                 primary key (id),
-                foreign key (restaurant_id) references restaurant(id)
+                foreign key (restaurant_id) references RESTAURANT(id)
             )
         `
         );

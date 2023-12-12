@@ -1,4 +1,3 @@
-// routes/restaurantRoutes.ts
 import { Request, Response } from "express";
 import { pool } from "../db/connection";
 import { v4 as uuidv4 } from "uuid"; 
@@ -17,7 +16,7 @@ export const createRestaurant = async (req: Request, res: Response) => {
     const { name, address, phone_number, rating }: Restaurant = req.body;
 
     const query = `
-        INSERT INTO restaurant (id, name, address, phone_number, rating) 
+        INSERT INTO RESTAURANT (id, name, address, phone_number, rating) 
         VALUES (?, ?, ?, ?, ?)
     `;
 

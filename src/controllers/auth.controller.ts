@@ -9,12 +9,12 @@ export const register = async (req: Request, res: Response) => {
     try {
         const { email, password, name } = req.body;
         
-        const [isEmailUsed] = await pool.query(
-            "SELECT email from user where email = ?",
+        const [isEmailUsed] = await pool.query<RowDataPacket[]>(
+            "SELECT email from USER where email = ?",
             [email]
         );
-
-        if (isEmailUsed){
+        
+        if (isEmailUsed.length > 0){
             return res.status(400).send({
                 message: "Email already in use"
             });
@@ -24,7 +24,7 @@ export const register = async (req: Request, res: Response) => {
         const id = uuidv4();
 
         await pool.query(
-            "INSERT INTO user (id, name, email, password) VALUE (?, ?, ?, ?)",
+            "INSERT INTO USER (id, name, email, password) VALUE (?, ?, ?, ?)",
             [id, name, email, hashedPassword]
         );
   
@@ -42,7 +42,7 @@ export const login = async (req: Request, res: Response) => {
         const { email, password } = req.body;
 
         const [users] = await pool.query<RowDataPacket[]>(
-            "SELECT * from user where email = ?",
+            "SELECT * from USER where email = ?",
             [email]
         );
 
