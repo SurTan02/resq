@@ -10,7 +10,7 @@ export const register = async (req: Request, res: Response) => {
         const { email, password, name } = req.body;
         
         const [isEmailUsed] = await pool.query(
-            "SELECT email from USER where email = ?",
+            "SELECT email from user where email = ?",
             [email]
         );
 
@@ -24,7 +24,7 @@ export const register = async (req: Request, res: Response) => {
         const id = uuidv4();
 
         await pool.query(
-            "INSERT INTO User (id, name, email, password) VALUE (?, ?, ?, ?)",
+            "INSERT INTO user (id, name, email, password) VALUE (?, ?, ?, ?)",
             [id, name, email, hashedPassword]
         );
   
@@ -42,7 +42,7 @@ export const login = async (req: Request, res: Response) => {
         const { email, password } = req.body;
 
         const [users] = await pool.query<RowDataPacket[]>(
-            "SELECT * from USER where email = ?",
+            "SELECT * from user where email = ?",
             [email]
         );
 
