@@ -16,7 +16,7 @@ export const register = async (req: Request, res: Response) => {
         
         if (isEmailUsed.length > 0){
             return res.status(400).send({
-                message: "Email already in use"
+                message: "Email already used"
             });
         }
         
@@ -48,7 +48,7 @@ export const login = async (req: Request, res: Response) => {
 
         if (!users || users.length === 0){
             return res.status(401).send({
-                message: "Invalid Credential"
+                message: "Invalid credential"
             });
         }
 
@@ -56,7 +56,7 @@ export const login = async (req: Request, res: Response) => {
         const validPassword = await bcrypt.compare(password, users[0].password);
         if (!validPassword) {
             return res.status(401).send({
-                message: "Invalid credentials"
+                message: "Invalid credential"
             });
         }
         
@@ -70,7 +70,7 @@ export const login = async (req: Request, res: Response) => {
             { expiresIn: "1h" }
         );
 
-        res.status(201).json({
+        res.status(200).json({
             message: "Success",
             token: accessToken
         });

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { verify } from "jsonwebtoken";
+import { JwtPayload, verify } from "jsonwebtoken";
 
 export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers["authorization"];
@@ -10,10 +10,7 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
     try {
         verify(token, process.env.JWT_SECRET!, (err, user) => {
             if (err) return res.sendStatus(403);
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            req.user = user;
-            console.log(user);
+            req.user = user as JwtPayload;
             next();
         });
     } catch (error) {
