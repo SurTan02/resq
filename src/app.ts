@@ -1,5 +1,5 @@
 import express from "express";
-import { init, migration } from "./db/connection";
+import { init } from "./db/connection";
 import router from "./routes/routes";
 import "dotenv/config";
 import cors from "cors";
