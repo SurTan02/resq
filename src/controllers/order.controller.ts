@@ -19,6 +19,14 @@ export interface CountOrders extends RowDataPacket {
     count: number
 };
 
+export interface FoodQuantity extends RowDataPacket {
+    quantity: number
+};
+
+export interface FoodId extends RowDataPacket {
+    food_id: string
+}
+
 export const getAllOrders = async (req: Request, res: Response) => {
     try {
         const [rows] = await pool.query(
@@ -64,6 +72,24 @@ export const placeOrder = async (req: Request, res: Response) => {
     const { food_id }: Order = req.body;
   
     try {
+        // check the quantity of food ordered
+        const [foodQuantityResult] = await pool.query<FoodQuantity[]>(
+            `
+                SELECT quantity
+                FROM food
+                WHERE id = ?
+            `,
+            [food_id]
+        );
+        const foodQuantity = foodQuantityResult[0].quantity;
+        console.log(foodQuantity);
+
+        if (foodQuantity < 1) {
+            return res.status(400).json({
+                message: "Out of stock"
+            })
+        }
+
         // check if user is subscribed
         const [membershipTypeResult] = await pool.query<MembershipTypeUser[]>("SELECT membership_type FROM user WHERE id = ?", [req.user.id]);
         const membershipType = membershipTypeResult[0].membership_type == "premium" ? true : false;
@@ -94,6 +120,16 @@ export const placeOrder = async (req: Request, res: Response) => {
             [id, req.user.id, food_id, date]
         );
 
+        // update food quantity
+        await pool.query(
+            `
+                UPDATE food 
+                SET quantity = ?
+                WHERE id = ?
+            `,
+            [foodQuantity - 1, food_id]
+        );
+
         res.status(201).json({
             message: "Order placed successfully",
             data: {
@@ -109,6 +145,32 @@ export const placeOrder = async (req: Request, res: Response) => {
 export const updateOrder = async (req: Request, res: Response) => {
     const { order_id, status } = req.body;
     try {
+        // update food quantity if order failed
+        if (status == "failed") {
+            const [foodIdResult] = await pool.query<FoodId[]>(
+                `
+                    SELECT food_id
+                    FROM orders
+                    WHERE id = ?                  
+                `,
+                [order_id]
+            )
+            const foodId = foodIdResult[0].food_id;
+
+            await pool.query(
+                `                
+                UPDATE food
+                SET quantity = (
+                    SELECT quantity
+                    FROM food
+                    WHERE id = ?
+                ) + 1
+                WHERE id = ?
+                `,
+                [foodId, foodId]
+            );
+        } 
+
         await pool.query(
             `
                 INSERT INTO order_history
