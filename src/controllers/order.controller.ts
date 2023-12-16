@@ -47,14 +47,13 @@ export const getAllOrders = async (req: Request, res: Response) => {
 
 export const getOrders = async (req: Request, res: Response) => {
     try {
-        const userId = req.params.user_id;
         const [rows] = await pool.query(
             `
                 SELECT * 
                 FROM orders 
                 WHERE user_id = ?
             `,
-            [userId]
+            [req.user.id]
         );
         res.status(200).json({
             "message": "Success",
@@ -216,14 +215,13 @@ export const getAllOrderHistory = async (req: Request, res: Response) => {
 
 export const getOrderHistory = async (req: Request, res: Response) => {
     try {
-        const userId = req.params.user_id;
         const [rows] = await pool.query(
             `
                 SELECT * 
                 FROM order_history
                 WHERE user_id = ?
             `,
-            [userId]
+            [req.user.id]
         );
         res.status(200).json({
             "message": "Success",
