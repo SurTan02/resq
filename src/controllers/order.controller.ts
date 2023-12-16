@@ -11,8 +11,8 @@ export interface Order {
     order_date?: Date;
 };
 
-export interface IsSubscribedUser extends RowDataPacket {
-    is_subscribed: boolean
+export interface MembershipTypeUser extends RowDataPacket {
+    membership_type: string
 };
 
 export interface CountOrders extends RowDataPacket {
@@ -61,12 +61,12 @@ export const getOrders = async (req: Request, res: Response) => {
 export const placeOrder = async (req: Request, res: Response) => {
     const id = uuidv4();
     const date = new Date().toISOString().split('T')[0];
-    const { user_id, food_id }: Order = req.body;
+    const { food_id }: Order = req.body;
   
     try {
         // check if user is subscribed
-        const [isSubscribedResult] = await pool.query<IsSubscribedUser[]>("SELECT is_subscribed FROM user WHERE id = ?", [user_id]);
-        const isSubscribed = isSubscribedResult[0].is_subscribed
+        const [membershipTypeResult] = await pool.query<MembershipTypeUser[]>("SELECT membership_type FROM user WHERE id = ?", [req.user.id]);
+        const membershipType = membershipTypeResult[0].membership_type == "premium" ? true : false;
 
         // check if user has placed an order today
         const [countOrdersResult] = await pool.query<CountOrders[]>(
@@ -76,11 +76,11 @@ export const placeOrder = async (req: Request, res: Response) => {
                 WHERE user_id = ? 
                 AND order_date = ?
             `,
-            [user_id, date]
+            [req.user.id, date]
         );
         const hasOrdered = countOrdersResult[0].count > 0;
 
-        if (!isSubscribed && hasOrdered) {
+        if (!membershipType && hasOrdered) {
             return res.status(400).json({
                 message: "Exceeds order quota"
             })
@@ -91,7 +91,7 @@ export const placeOrder = async (req: Request, res: Response) => {
                 INSERT INTO orders (id, user_id, food_id, order_date)
                 VALUES (?, ?, ?, ?)
             `,
-            [id, user_id, food_id, date]
+            [id, req.user.id, food_id, date]
         );
 
         res.status(201).json({

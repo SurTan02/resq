@@ -29,7 +29,7 @@ router.get("/foods/:food_name", searchFoodsByName);
 // Order
 router.get("/orders", getAllOrders);
 router.get("/orders/:user_id", getOrders);
-router.post("/orders", placeOrder);
+router.post("/orders", authenticateToken, placeOrder);
 
 router.post("/update-order", updateOrder);
 router.get("/order/history", getAllOrderHistory);
