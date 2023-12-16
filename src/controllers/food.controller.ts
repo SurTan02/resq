@@ -9,14 +9,32 @@ export interface Food {
     description: string;
     price: number;
     discount_price: number;
-    quantity: string;
+    quantity: number;
     image: string;
     restaurant_id: string;
+    type?: string;
 }
 
 export const getFoods = async (req: Request, res: Response) => {
     try {
-        const [rows] = await pool.query("SELECT * FROM food");
+        const [rows] = await pool.query("SELECT * FROM FOOD");
+        res.status(200).json({
+            "message": "Success",
+            "data": rows
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Error in query" });
+    }
+};
+
+export const getFoodById = async (req: Request, res: Response) => {
+    const id = req.params.id;
+    const query = `
+        SELECT * FROM FOOD WHERE id = ?
+    `;
+    try {
+        const [rows] = await pool.query(query, [id]);
         res.status(200).json({
             "message": "Success",
             "data": rows
@@ -32,7 +50,7 @@ export const createFood = async (req: Request, res: Response) => {
     const { name, description, price, discount_price, quantity, image, restaurant_id }: Food = req.body;
 
     const query = `
-        INSERT INTO food (id, name, description, price, discount_price, quantity, image, restaurant_id) 
+        INSERT INTO FOOD (id, name, description, price, discount_price, quantity, image, restaurant_id) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
@@ -55,7 +73,7 @@ export const updateFood =async (req: Request, res: Response) => {
     const { name, description, price}: Food = req.body;
 
     const query = `
-        UPDATE food set
+        UPDATE FOOD set
             name = COALESCE(?, name),
             description = COALESCE(?, description),
             price = COALESCE(?, price)
@@ -79,8 +97,22 @@ export const updateFood =async (req: Request, res: Response) => {
 
 // TODO
 // getFoods by restaurant
-// getFood by id
-// deleteFood
+export const getFoodsByRestaurant = async (req: Request, res: Response) => {
+    const restaurant_id = req.params.restaurant_id;
+    const query = `
+        SELECT * FROM FOOD WHERE restaurant_id = ?
+    `;
+    try {
+        const [rows] = await pool.query(query, [restaurant_id]);
+        res.status(200).json({
+            "message": "Success",
+            "data": rows
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Error in query" });
+    }
+};
 
 export const searchFoodsByName = async (req: Request, res: Response) => {
     const name = req.params.food_name;

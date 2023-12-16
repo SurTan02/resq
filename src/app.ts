@@ -1,11 +1,22 @@
 import express from "express";
-import { init, migration } from "./db/connection";
+import { init } from "./db/connection";
 import router from "./routes/routes";
 import "dotenv/config";
+import cors from "cors";
+
 
 const app = express();
 const port = process.env.PORT;
 
+app.use(cors({
+    origin: "*",
+    credentials:true,
+    optionsSuccessStatus: 200
+}));
+
+app.get("/", (_req, res) => {
+    res.send("Foodres API");
+});
 
 app.use(express.json());
 
@@ -14,7 +25,6 @@ app.use("/api/v1", router);
 
 const run = async () =>{
     init();
-    await migration();
     app.listen(port, () => {
         console.log(`Server running on port http://localhost:${port}`);
     });
