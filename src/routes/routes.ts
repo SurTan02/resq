@@ -28,11 +28,11 @@ router.get("/foods/:food_name", searchFoodsByName);
 
 // Order
 router.get("/orders", getAllOrders);
-router.get("/orders/:user_id", getOrders);
-router.post("/orders", authenticateToken, placeOrder);
+router.get("/orders", authenticateToken, getOrders);
+router.post("/orders/all", authenticateToken, placeOrder);
 
 router.post("/update-order", updateOrder);
-router.get("/order/history", getAllOrderHistory);
-router.get("/order/history/:user_id", getOrderHistory);
+router.get("/order/history/all", getAllOrderHistory);
+router.get("/order/history", authenticateToken, getOrderHistory);
 
 export default router;
