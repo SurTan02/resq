@@ -3,13 +3,23 @@ import { pool } from "../db/connection";
 import { v4 as uuidv4 } from "uuid"; 
 import { RowDataPacket } from "mysql2";
 
-// interfaces/order.ts
-export interface Order {
-    id?: string;
+export interface Order extends RowDataPacket {
+    id: string;
     user_id: string;
-    food_id: string;
-    order_date?: Date;
+    restaurant_id: string;
+    order_date: string;
 };
+
+export interface OrderDetail extends RowDataPacket {
+    id: string;
+    food_id: string;
+    quantity: number;
+}
+
+export interface OrderRequest {
+    restaurant_id: string,
+    orders: OrderDetail[];
+}
 
 export interface MembershipTypeUser extends RowDataPacket {
     membership_type: string
@@ -23,9 +33,6 @@ export interface FoodQuantity extends RowDataPacket {
     quantity: number
 };
 
-export interface FoodId extends RowDataPacket {
-    food_id: string
-}
 
 export const getAllOrders = async (req: Request, res: Response) => {
     try {
@@ -55,6 +62,7 @@ export const getOrders = async (req: Request, res: Response) => {
             `,
             [req.user.id]
         );
+
         res.status(200).json({
             "message": "Success",
             "data": rows
@@ -65,27 +73,54 @@ export const getOrders = async (req: Request, res: Response) => {
     }
 };
 
+export const getOrderDetail = async (req: Request, res: Response) => {
+    const orderId = req.params.order_id;
+
+    try {
+        const [orderRows] = await pool.query(
+            `
+                SELECT * 
+                FROM ORDER_DETAIL 
+                WHERE order_id = ?
+            `,
+            [orderId]
+        );
+
+        res.status(200).json({
+            "message": "Success",
+            "data": orderRows
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Error in query" });
+    }
+};
+
 export const placeOrder = async (req: Request, res: Response) => {
     const id = uuidv4();
     const date = new Date().toISOString().split('T')[0];
-    const { food_id }: Order = req.body;
+    const { restaurant_id, orders }: OrderRequest = req.body;
   
     try {
         // check the quantity of food ordered
-        const [foodQuantityResult] = await pool.query<FoodQuantity[]>(
-            `
-                SELECT quantity
-                FROM FOOD
-                WHERE id = ?
-            `,
-            [food_id]
-        );
-        const foodQuantity = foodQuantityResult[0].quantity;
-
-        if (foodQuantity < 1) {
-            return res.status(400).json({
-                message: "Out of stock"
-            })
+        let foodQuantityList = [];
+        for (const order of orders) {
+            const [foodQuantityResult] = await pool.query<FoodQuantity[]>(
+                `
+                    SELECT quantity
+                    FROM FOOD
+                    WHERE id = ?
+                `,
+                [order.food_id]
+            );
+            const foodQuantity = foodQuantityResult[0].quantity;
+            foodQuantityList.push(foodQuantity);
+    
+            if (foodQuantity < order.quantity) {
+                return res.status(400).json({
+                    message: "Out of stock"
+                })
+            }
         }
 
         // check if user is subscribed
@@ -102,7 +137,16 @@ export const placeOrder = async (req: Request, res: Response) => {
             `,
             [req.user.id, date]
         );
-        const hasOrdered = countOrdersResult[0].count > 0;
+        const [countOrderHistoryResult] = await pool.query<CountOrders[]>(
+            `
+                SELECT COUNT(*) as count 
+                FROM ORDER_HISTORY
+                WHERE user_id = ? 
+                AND order_date = ?
+            `,
+            [req.user.id, date]
+        );
+        const hasOrdered = countOrdersResult[0].count > 0 || countOrderHistoryResult[0].count > 0;
 
         if (!membershipType && hasOrdered) {
             return res.status(400).json({
@@ -110,23 +154,37 @@ export const placeOrder = async (req: Request, res: Response) => {
             })
         }
         
+        // insert into orders and order_detail table
         await pool.query(
             `
-                INSERT INTO ORDERS (id, user_id, food_id, order_date)
+                INSERT INTO ORDERS (id, user_id, restaurant_id, order_date)
                 VALUES (?, ?, ?, ?)
             `,
-            [id, req.user.id, food_id, date]
+            [id, req.user.id, restaurant_id, date]
         );
+        for (const order of orders) {
+            const detailId = uuidv4();
+            await pool.query(
+                `
+                    INSERT INTO ORDER_DETAIL (id, order_id, food_id, quantity)
+                    VALUES (?, ?, ?, ?)
+                `,
+                [detailId, id, order.food_id, order.quantity]
+            );
+        }
 
         // update food quantity
-        await pool.query(
-            `
-                UPDATE FOOD 
-                SET quantity = ?
-                WHERE id = ?
-            `,
-            [foodQuantity - 1, food_id]
-        );
+        for (const order of orders) {
+            let currentFoodQuantity = foodQuantityList.length > 0 ? foodQuantityList.shift()! : 0;
+            await pool.query(
+                `
+                    UPDATE FOOD 
+                    SET quantity = ?
+                    WHERE id = ?
+                `,
+                [currentFoodQuantity - order.quantity, order.food_id]
+            );
+        }
 
         res.status(201).json({
             message: "Order placed successfully",
@@ -143,32 +201,39 @@ export const placeOrder = async (req: Request, res: Response) => {
 export const updateOrder = async (req: Request, res: Response) => {
     const { order_id, status } = req.body;
     try {
-        // update food quantity if order failed
-        if (status == "failed") {
-            const [foodIdResult] = await pool.query<FoodId[]>(
-                `
-                    SELECT food_id
-                    FROM ORDERS
-                    WHERE id = ?                  
-                `,
-                [order_id]
-            )
-            const foodId = foodIdResult[0].food_id;
+        const [orderDetailResult] = await pool.query<OrderDetail[]>(
+            `
+                SELECT id, food_id, quantity
+                FROM ORDER_DETAIL
+                WHERE order_id = ?                  
+            `,
+            [order_id]
+        )
 
-            await pool.query(
-                `                
-                UPDATE FOOD
-                SET quantity = (
-                    SELECT quantity
-                    FROM FOOD
+        // update food quantity if order failed
+        if (status == "failed") {            
+            for (let i = 0; i < orderDetailResult.length; i++) {
+                let orderDetail = orderDetailResult[i];
+
+                await pool.query(
+                    `                
+                    UPDATE FOOD
+                    SET quantity = (
+                        SELECT f.quantity
+                        FROM (
+                            SELECT quantity
+                            FROM FOOD
+                            WHERE id = ?
+                        ) AS f
+                    ) + ?
                     WHERE id = ?
-                ) + 1
-                WHERE id = ?
-                `,
-                [foodId, foodId]
-            );
+                    `,
+                    [orderDetail.food_id, orderDetail.quantity, orderDetail.food_id]
+                );
+            }
         } 
 
+        // insert to order history
         await pool.query(
             `
                 INSERT INTO ORDER_HISTORY
@@ -178,6 +243,33 @@ export const updateOrder = async (req: Request, res: Response) => {
             `,
             [status, order_id]
         );
+
+        for (let i = 0; i < orderDetailResult.length; i++) {
+            let orderDetailId = orderDetailResult[i].id;
+
+            // insert to order history detail
+            await pool.query(
+                `
+                    INSERT INTO ORDER_HISTORY_DETAIL
+                    SELECT *
+                    FROM ORDER_DETAIL
+                    WHERE id = ?
+                `,
+                [orderDetailId]
+            );
+
+            // delete from order detail
+            await pool.query(
+                `
+                    DELETE FROM ORDER_DETAIL
+                    WHERE id = ?
+                `,
+                [orderDetailId]
+            );
+        }
+
+
+        // delete from orders
         await pool.query(
             `
                 DELETE FROM ORDERS
@@ -221,6 +313,29 @@ export const getOrderHistory = async (req: Request, res: Response) => {
                 WHERE user_id = ?
             `,
             [req.user.id]
+        );
+        
+        res.status(200).json({
+            "message": "Success",
+            "data": rows
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Error in query" });
+    }
+};
+
+export const getOrderHistoryDetail = async (req: Request, res: Response) => {
+    const orderHistoryId = req.params.order_history_id;
+    
+    try {
+        const [rows] = await pool.query(
+            `
+                SELECT * 
+                FROM ORDER_HISTORY_DETAIL
+                WHERE order_history_id = ?
+            `,
+            [orderHistoryId]
         );
         res.status(200).json({
             "message": "Success",

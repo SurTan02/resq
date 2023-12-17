@@ -4,7 +4,7 @@ import { createRestaurant, getRestaurants } from "../controllers/restaurant.cont
 import { createFood, getFoodById, getFoods, getFoodsByRestaurant, updateFood } from "../controllers/food.controller";
 import { authenticateToken } from "../middlewares/auth.middleware";
 import { profile, subscribe } from "../controllers/profile.controller";
-import { placeOrder, getAllOrders, getOrders, updateOrder, getAllOrderHistory, getOrderHistory } from "../controllers/order.controller";
+import { placeOrder, getAllOrders, getOrders, updateOrder, getAllOrderHistory, getOrderHistory, getOrderDetail, getOrderHistoryDetail } from "../controllers/order.controller";
 
 const router = express.Router();
 
@@ -29,10 +29,12 @@ router.patch("/foods/:id", authenticateToken, updateFood);
 // Order
 router.get("/orders/all", getAllOrders);
 router.get("/orders", authenticateToken, getOrders);
-router.post("/orders", authenticateToken, placeOrder);
+router.get("/orders/:order_id", getOrderDetail);
+router.post("/order", authenticateToken, placeOrder);
 
 router.post("/update-order", updateOrder);
 router.get("/order/history/all", getAllOrderHistory);
 router.get("/order/history", authenticateToken, getOrderHistory);
+router.get("/order/history/:order_history_id", getOrderHistoryDetail);
 
 export default router;
