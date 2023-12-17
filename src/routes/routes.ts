@@ -3,7 +3,7 @@ import { login, register} from "../controllers/auth.controller";
 import { createRestaurant, getRestaurants } from "../controllers/restaurant.controller";
 import { createFood, getFoodById, getFoods, getFoodsByRestaurant, updateFood } from "../controllers/food.controller";
 import { authenticateToken } from "../middlewares/auth.middleware";
-import { profile, subscribe } from "../controllers/profile.controller";
+import { getSubscription, profile, subscribe } from "../controllers/profile.controller";
 import { placeOrder, getAllOrders, getOrders, updateOrder, getAllOrderHistory, getOrderHistory, getOrderDetail, getOrderHistoryDetail } from "../controllers/order.controller";
 
 const router = express.Router();
@@ -13,6 +13,7 @@ router.post("/register", register);
 router.post("/login", login);
 router.get("/profile/me", authenticateToken, profile);
 router.post("/subscribe", authenticateToken, subscribe);
+router.get("/subscription", authenticateToken, getSubscription);
 
 // Restaurant
 router.get("/restaurants", getRestaurants);

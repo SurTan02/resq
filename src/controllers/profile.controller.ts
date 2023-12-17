@@ -42,3 +42,21 @@ export const subscribe = async (req: Request, res: Response) => {
       res.status(500).send({ message: "Error subscribing user" });
   }
 };
+
+export const getSubscription = async (req: Request, res: Response) => {
+  try {      
+      const [rows] = await pool.query<RowDataPacket[]>(
+          "SELECT membership_type from USER where id = ?",
+          [req.user.id]
+      );
+
+      res.status(200).json({
+          message: "Success",
+          data: rows[0]
+      });
+
+  } catch (error) {
+      console.error(error);
+      res.status(500).send({ message: "Error in query" });
+  }
+};
