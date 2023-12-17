@@ -32,7 +32,7 @@ export const getAllOrders = async (req: Request, res: Response) => {
         const [rows] = await pool.query(
             `
                 SELECT * 
-                FROM orders
+                FROM ORDERS
             `
         );
         res.status(200).json({
@@ -50,7 +50,7 @@ export const getOrders = async (req: Request, res: Response) => {
         const [rows] = await pool.query(
             `
                 SELECT * 
-                FROM orders 
+                FROM ORDERS 
                 WHERE user_id = ?
             `,
             [req.user.id]
@@ -75,7 +75,7 @@ export const placeOrder = async (req: Request, res: Response) => {
         const [foodQuantityResult] = await pool.query<FoodQuantity[]>(
             `
                 SELECT quantity
-                FROM food
+                FROM FOOD
                 WHERE id = ?
             `,
             [food_id]
@@ -97,7 +97,7 @@ export const placeOrder = async (req: Request, res: Response) => {
         const [countOrdersResult] = await pool.query<CountOrders[]>(
             `
                 SELECT COUNT(*) as count 
-                FROM orders 
+                FROM ORDERS 
                 WHERE user_id = ? 
                 AND order_date = ?
             `,
@@ -113,7 +113,7 @@ export const placeOrder = async (req: Request, res: Response) => {
         
         await pool.query(
             `
-                INSERT INTO orders (id, user_id, food_id, order_date)
+                INSERT INTO ORDERS (id, user_id, food_id, order_date)
                 VALUES (?, ?, ?, ?)
             `,
             [id, req.user.id, food_id, date]
@@ -122,7 +122,7 @@ export const placeOrder = async (req: Request, res: Response) => {
         // update food quantity
         await pool.query(
             `
-                UPDATE food 
+                UPDATE FOOD 
                 SET quantity = ?
                 WHERE id = ?
             `,
@@ -149,7 +149,7 @@ export const updateOrder = async (req: Request, res: Response) => {
             const [foodIdResult] = await pool.query<FoodId[]>(
                 `
                     SELECT food_id
-                    FROM orders
+                    FROM ORDERS
                     WHERE id = ?                  
                 `,
                 [order_id]
@@ -158,10 +158,10 @@ export const updateOrder = async (req: Request, res: Response) => {
 
             await pool.query(
                 `                
-                UPDATE food
+                UPDATE FOOD
                 SET quantity = (
                     SELECT quantity
-                    FROM food
+                    FROM FOOD
                     WHERE id = ?
                 ) + 1
                 WHERE id = ?
@@ -172,16 +172,16 @@ export const updateOrder = async (req: Request, res: Response) => {
 
         await pool.query(
             `
-                INSERT INTO order_history
+                INSERT INTO ORDER_HISTORY
                 SELECT *, ? AS status
-                FROM orders
+                FROM ORDERS
                 WHERE id = ?
             `,
             [status, order_id]
         );
         await pool.query(
             `
-                DELETE FROM orders
+                DELETE FROM ORDERS
                 WHERE id = ?
             `,
             [order_id]
@@ -200,7 +200,7 @@ export const getAllOrderHistory = async (req: Request, res: Response) => {
         const [rows] = await pool.query(
             `
                 SELECT * 
-                FROM order_history
+                FROM ORDER_HISTORY
             `
         );
         res.status(200).json({
@@ -218,7 +218,7 @@ export const getOrderHistory = async (req: Request, res: Response) => {
         const [rows] = await pool.query(
             `
                 SELECT * 
-                FROM order_history
+                FROM ORDER_HISTORY
                 WHERE user_id = ?
             `,
             [req.user.id]

@@ -119,7 +119,7 @@ export const searchFoodsByName = async (req: Request, res: Response) => {
 
     const query = `
         SELECT * 
-        FROM food 
+        FROM FOOD 
         WHERE name LIKE ?
     `;
 

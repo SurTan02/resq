@@ -26,7 +26,7 @@ export const subscribe = async (req: Request, res: Response) => {
       
       await pool.query(
           `
-            UPDATE user
+            UPDATE USER
             SET membership_type = 'premium'
             WHERE id = ?
           `,
