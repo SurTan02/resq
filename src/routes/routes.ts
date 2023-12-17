@@ -28,9 +28,9 @@ router.patch("/foods/:id", authenticateToken, updateFood);
 router.get("/foods/:food_name", searchFoodsByName);
 
 // Order
-router.get("/orders", getAllOrders);
+router.get("/orders/all", getAllOrders);
 router.get("/orders", authenticateToken, getOrders);
-router.post("/orders/all", authenticateToken, placeOrder);
+router.post("/orders", authenticateToken, placeOrder);
 
 router.post("/update-order", updateOrder);
 router.get("/order/history/all", getAllOrderHistory);

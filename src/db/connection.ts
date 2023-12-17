@@ -71,61 +71,32 @@ export const migration = async () => {
         // table Order
         await pool.query(
             `
-            CREATE TABLE IF NOT EXISTS orders (
+            CREATE TABLE IF NOT EXISTS ORDERS (
                 id char(36) not null,
                 user_id char(36) not null,
                 food_id char(36) not null,
                 order_date date not null,
                 primary key (id),
-                foreign key (user_id) references user(id),
-                foreign key (food_id) references food(id)
+                foreign key (user_id) references USER(id),
+                foreign key (food_id) references FOOD(id)
             )
         `
         );
         // table Order History
         await pool.query(
             `
-            CREATE TABLE IF NOT EXISTS order_history (
+            CREATE TABLE IF NOT EXISTS ORDER_HISTORY (
                 id char(36) not null,
                 user_id char(36) not null,
                 food_id char(36) not null,
                 order_date date not null,
                 status ENUM('success', 'failed') not null,
                 primary key (id),
-                foreign key (user_id) references user(id),
-                foreign key (food_id) references food(id)
+                foreign key (user_id) references USER(id),
+                foreign key (food_id) references FOOD(id)
             )
         `
-        );
-        // table Order
-        await pool.query(
-            `
-            CREATE TABLE IF NOT EXISTS orders (
-                id char(36) not null,
-                user_id char(36) not null,
-                food_id char(36) not null,
-                order_date date not null,
-                primary key (id),
-                foreign key (user_id) references user(id),
-                foreign key (food_id) references food(id)
-            )
-        `
-        );
-        // table Order History
-        await pool.query(
-            `
-            CREATE TABLE IF NOT EXISTS order_history (
-                id char(36) not null,
-                user_id char(36) not null,
-                food_id char(36) not null,
-                order_date date not null,
-                status char(36) not null,
-                primary key (id),
-                foreign key (user_id) references user(id),
-                foreign key (food_id) references food(id)
-            )
-        `
-        );
+        );        
     } catch (err) {
         console.error("[Error]: ", err);
         throw err;
