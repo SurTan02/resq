@@ -29,10 +29,15 @@ export interface CountOrders extends RowDataPacket {
     count: number
 };
 
-export interface FoodQuantity extends RowDataPacket {
-    quantity: number
+export interface Food extends RowDataPacket {
+    name: string;
+    quantity: number;
 };
 
+export interface FoodDetail {
+    id: string;
+    name: string;
+}
 
 export const getAllOrders = async (req: Request, res: Response) => {
     try {
@@ -105,7 +110,7 @@ export const placeOrder = async (req: Request, res: Response) => {
         // check the quantity of food ordered
         let foodQuantityList = [];
         for (const order of orders) {
-            const [foodQuantityResult] = await pool.query<FoodQuantity[]>(
+            const [foodQuantityResult] = await pool.query <Food[]>(
                 `
                     SELECT quantity
                     FROM FOOD
@@ -340,6 +345,62 @@ export const getOrderHistoryDetail = async (req: Request, res: Response) => {
         res.status(200).json({
             "message": "Success",
             "data": rows
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Error in query" });
+    }
+};
+
+export const getAllSuccessfulOrderHistory = async (req: Request, res: Response) => {
+    try {
+        const foodDetailList : FoodDetail[] = [];
+
+        const [orderHistoryRows] = await pool.query<Order[]>(
+            `
+                SELECT id
+                FROM ORDER_HISTORY
+                WHERE user_id = ?
+                AND status = "success"
+            `,
+            [req.user.id]
+        );
+
+        for (const orderHistoryRow of orderHistoryRows) {
+            console.log(orderHistoryRow);
+            // search food id
+            const [orderHistoryDetailRows] = await pool.query<OrderDetail[]>(
+                `
+                    SELECT food_id
+                    FROM ORDER_HISTORY_DETAIL
+                    WHERE order_history_id = ?
+                `,
+                [orderHistoryRow.id]
+            )
+            for (const orderHistoryDetailRow of orderHistoryDetailRows) {
+                console.log(orderHistoryDetailRow)
+                // search food name
+                const [foodRows] = await pool.query<Food[]>(
+                    `
+                        SELECT name
+                        FROM FOOD
+                        WHERE id = ?
+                    `,
+                    [orderHistoryDetailRow.food_id]
+                )
+
+                let foodDetail : FoodDetail = {
+                    id: orderHistoryDetailRow.food_id,
+                    name: foodRows[0].name
+                }
+                foodDetailList.push(foodDetail);
+            }
+            
+        }
+
+        res.status(200).json({
+            "message": "Success",
+            "data": foodDetailList
         });
     } catch (error) {
         console.error(error);
