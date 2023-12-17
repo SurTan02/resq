@@ -81,7 +81,6 @@ export const placeOrder = async (req: Request, res: Response) => {
             [food_id]
         );
         const foodQuantity = foodQuantityResult[0].quantity;
-        console.log(foodQuantity);
 
         if (foodQuantity < 1) {
             return res.status(400).json({
@@ -90,7 +89,7 @@ export const placeOrder = async (req: Request, res: Response) => {
         }
 
         // check if user is subscribed
-        const [membershipTypeResult] = await pool.query<MembershipTypeUser[]>("SELECT membership_type FROM user WHERE id = ?", [req.user.id]);
+        const [membershipTypeResult] = await pool.query<MembershipTypeUser[]>("SELECT membership_type FROM USER WHERE id = ?", [req.user.id]);
         const membershipType = membershipTypeResult[0].membership_type == "premium" ? true : false;
 
         // check if user has placed an order today
