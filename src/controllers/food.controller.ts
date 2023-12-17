@@ -17,7 +17,15 @@ export interface Food {
 
 export const getFoods = async (req: Request, res: Response) => {
     try {
-        const [rows] = await pool.query("SELECT * FROM FOOD");
+        const { name } = req.query;
+        let rows = null;
+
+        if (name != null) {
+            [rows] = await pool.query("SELECT * FROM FOOD WHERE name LIKE ?", [`%${name}%`]);
+        } else {
+            [rows] = await pool.query("SELECT * FROM FOOD");
+        }
+
         res.status(200).json({
             "message": "Success",
             "data": rows
@@ -104,28 +112,6 @@ export const getFoodsByRestaurant = async (req: Request, res: Response) => {
     `;
     try {
         const [rows] = await pool.query(query, [restaurant_id]);
-        res.status(200).json({
-            "message": "Success",
-            "data": rows
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).send({ message: "Error in query" });
-    }
-};
-
-export const searchFoodsByName = async (req: Request, res: Response) => {
-    const name = req.params.food_name;
-
-    const query = `
-        SELECT * 
-        FROM FOOD 
-        WHERE name LIKE ?
-    `;
-
-    try {
-        const [rows] = await pool.query(query, [`%${name}%`]);
-
         res.status(200).json({
             "message": "Success",
             "data": rows

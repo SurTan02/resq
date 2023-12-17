@@ -1,7 +1,7 @@
 import express from "express";
 import { login, register} from "../controllers/auth.controller";
 import { createRestaurant, getRestaurants } from "../controllers/restaurant.controller";
-import { createFood, getFoodById, getFoods, getFoodsByRestaurant, searchFoodsByName, updateFood } from "../controllers/food.controller";
+import { createFood, getFoodById, getFoods, getFoodsByRestaurant, updateFood } from "../controllers/food.controller";
 import { authenticateToken } from "../middlewares/auth.middleware";
 import { profile, subscribe } from "../controllers/profile.controller";
 import { placeOrder, getAllOrders, getOrders, updateOrder, getAllOrderHistory, getOrderHistory } from "../controllers/order.controller";
@@ -25,7 +25,6 @@ router.get("/foods", getFoods);
 router.get("/foods/:id", getFoodById);
 router.post("/foods", createFood);
 router.patch("/foods/:id", authenticateToken, updateFood);
-router.get("/foods/:food_name", searchFoodsByName);
 
 // Order
 router.get("/orders/all", getAllOrders);
