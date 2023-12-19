@@ -75,7 +75,7 @@ export const migration = async () => {
                 id char(36) not null,
                 user_id char(36) not null,
                 restaurant_id char(36) not null,
-                order_date date not null,
+                order_date char(10) not null,
                 primary key (id),
                 foreign key (user_id) references USER(id),
                 foreign key (restaurant_id) references RESTAURANT(id)
@@ -103,7 +103,7 @@ export const migration = async () => {
                 id char(36) not null,
                 user_id char(36) not null,
                 restaurant_id char(36) not null,
-                order_date date not null,
+                order_date char(10) not null,
                 status ENUM('success', 'failed') not null,
                 primary key (id),
                 foreign key (user_id) references USER(id)
