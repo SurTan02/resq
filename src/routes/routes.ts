@@ -1,6 +1,6 @@
 import express from "express";
 import { login, register} from "../controllers/auth.controller";
-import { createRestaurant, getRestaurants } from "../controllers/restaurant.controller";
+import { createRestaurant, getRestaurantById, getRestaurants } from "../controllers/restaurant.controller";
 import { createFood, getFoodById, getFoods, getFoodsByRestaurant, updateFood } from "../controllers/food.controller";
 import { authenticateToken } from "../middlewares/auth.middleware";
 import { getSubscription, profile, subscribe } from "../controllers/profile.controller";
@@ -17,6 +17,7 @@ router.get("/subscription", authenticateToken, getSubscription);
 
 // Restaurant
 router.get("/restaurants", getRestaurants);
+router.get("/restaurants/:id", getRestaurantById);
 router.post("/restaurants", createRestaurant);
 router.get("/foods/restaurant/:restaurant_id", getFoodsByRestaurant);
 
