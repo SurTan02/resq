@@ -142,6 +142,9 @@ export const placeOrder = async (req: Request, res: Response) => {
         closeTimeDate.setMinutes(parseInt(closeTimeParts[1], 10));
         closeTimeDate.setSeconds(parseInt(closeTimeParts[2], 10));
         const closeTime = closeTimeDate.toLocaleTimeString();
+
+        console.log(`Current time: ${time}`)
+        console.log(`Open time restaurant: ${openTime}, Close time restaurant: ${closeTime}`);
         
         if (time < openTime || time > closeTime) {
             return res.status(400).json({
@@ -159,6 +162,8 @@ export const placeOrder = async (req: Request, res: Response) => {
             [food_id]
         );
         const foodQuantity = foodQuantityResult[0].quantity;
+
+        console.log(`Available food quantity: ${foodQuantity}`);
 
         if (foodQuantity < quantity) {
             return res.status(400).json({
@@ -193,6 +198,12 @@ export const placeOrder = async (req: Request, res: Response) => {
                 [req.user.id, formattedDate]
             );
             hasOrdered = countOrdersResult[0].count > 0 || countOrderHistoryResult[0].count > 0;
+
+            if (hasOrdered) {
+                console.log("User is not subscribed and has placed order today");
+            } else {
+                console.log("User is not subscribed and has not placed order today");
+            }
         }
 
         if (!isSubscribed && hasOrdered) {
@@ -205,6 +216,7 @@ export const placeOrder = async (req: Request, res: Response) => {
         let orderId = "";   
         // check if the user has placed order
         if (countOrdersResult[0].count == 0) {
+            console.log("Create new order");
             orderId = id;
             await pool.query(
                 `
@@ -226,6 +238,7 @@ export const placeOrder = async (req: Request, res: Response) => {
             const delay = closeTimeInMs - currentTimeInMs;
 
             // start the asynchronous function after the delay
+            console.log(`Order will expired in ${delay} ms`);
             setTimeout(async () => {
                 await updateOrderProcess(orderId, "failed");
             }, delay);
@@ -265,7 +278,7 @@ export const placeOrder = async (req: Request, res: Response) => {
         res.status(201).json({
             message: "Order placed successfully",
             data: {
-                id
+                orderId
             }
         });
     } catch (error) {
@@ -441,7 +454,6 @@ export const getAllSuccessfulOrderHistory = async (req: Request, res: Response) 
         );
 
         for (const orderHistoryRow of orderHistoryRows) {
-            console.log(orderHistoryRow);
             // search food id
             const [orderHistoryDetailRows] = await pool.query<OrderDetail[]>(
                 `
@@ -452,7 +464,6 @@ export const getAllSuccessfulOrderHistory = async (req: Request, res: Response) 
                 [orderHistoryRow.id]
             );
             for (const orderHistoryDetailRow of orderHistoryDetailRows) {
-                console.log(orderHistoryDetailRow);
                 // search food name
                 const [foodRows] = await pool.query<Food[]>(
                     `
