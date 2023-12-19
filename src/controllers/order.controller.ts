@@ -8,7 +8,7 @@ export interface Order extends RowDataPacket {
     user_id: string;
     restaurant_id: string;
     order_date: string;
-};
+}
 
 export interface OrderDetail extends RowDataPacket {
     id: string;
@@ -29,16 +29,16 @@ export interface Restaurant extends RowDataPacket {
 
 export interface MembershipTypeUser extends RowDataPacket {
     membership_type: string
-};
+}
 
 export interface CountOrders extends RowDataPacket {
     count: number
-};
+}
 
 export interface Food extends RowDataPacket {
     name: string;
     quantity: number;
-};
+}
 
 export interface FoodDetail {
     id: string;
@@ -110,11 +110,11 @@ export const getOrderDetail = async (req: Request, res: Response) => {
 export const placeOrder = async (req: Request, res: Response) => {
     const { restaurant_id, food_id, quantity }: OrderRequest = req.body;
     const id = uuidv4();
-    const date = new Date().toLocaleDateString('en-US', { timeZone: 'Asia/Jakarta' });
-    const time = new Date().toLocaleTimeString('en-US', { timeZone: 'Asia/Jakarta', hour12: false });
+    const date = new Date().toLocaleDateString("en-US", { timeZone: "Asia/Jakarta" });
+    const time = new Date().toLocaleTimeString("en-US", { timeZone: "Asia/Jakarta", hour12: false });
 
-    const [month, day, year] = date.split('/');
-    const formattedDate = new Date(`${year}-${month}-${day}`).toISOString().split('T')[0];
+    const [month, day, year] = date.split("/");
+    const formattedDate = new Date(`${year}-${month}-${day}`).toISOString().split("T")[0];
   
     try {
         // check the pickup time of restaurant
@@ -130,23 +130,23 @@ export const placeOrder = async (req: Request, res: Response) => {
         const closeTimeStr = pickupTimeResult[0].close_time;
 
         const openTimeParts = openTimeStr.split(":");
-        let openTimeDate = new Date();
+        const openTimeDate = new Date();
         openTimeDate.setHours(parseInt(openTimeParts[0], 10));
         openTimeDate.setMinutes(parseInt(openTimeParts[1], 10));
         openTimeDate.setSeconds(parseInt(openTimeParts[2], 10));
-        let openTime = openTimeDate.toLocaleTimeString();
+        const openTime = openTimeDate.toLocaleTimeString();
 
         const closeTimeParts = closeTimeStr.split(":");
-        let closeTimeDate = new Date();
+        const closeTimeDate = new Date();
         closeTimeDate.setHours(parseInt(closeTimeParts[0], 10));
         closeTimeDate.setMinutes(parseInt(closeTimeParts[1], 10));
         closeTimeDate.setSeconds(parseInt(closeTimeParts[2], 10));
-        let closeTime = closeTimeDate.toLocaleTimeString();
+        const closeTime = closeTimeDate.toLocaleTimeString();
         
         if (time < openTime || time > closeTime) {
             return res.status(400).json({
                 message: "Restaurant is closed"
-            })
+            });
         }
 
         // check the quantity of food ordered
@@ -163,7 +163,7 @@ export const placeOrder = async (req: Request, res: Response) => {
         if (foodQuantity < quantity) {
             return res.status(400).json({
                 message: "Out of stock"
-            })
+            });
         }
 
         // check if user is subscribed
@@ -198,7 +198,7 @@ export const placeOrder = async (req: Request, res: Response) => {
         if (!isSubscribed && hasOrdered) {
             return res.status(400).json({
                 message: "Exceeds order quota"
-            })
+            });
         }
         
         // insert into orders and order_detail table   
@@ -216,9 +216,9 @@ export const placeOrder = async (req: Request, res: Response) => {
 
             // set expired when exceeds pickup time
             // calculate delay time
-            const currentDate = new Date().toLocaleDateString('en-US');
-            const targetCurrentTime = currentDate + ' ' + time;
-            const targetCloseTime = currentDate + ' ' + closeTime;
+            const currentDate = new Date().toLocaleDateString("en-US");
+            const targetCurrentTime = currentDate + " " + time;
+            const targetCloseTime = currentDate + " " + closeTime;
 
             const currentTimeInMs = new Date(targetCurrentTime).getTime();
             const closeTimeInMs = new Date(targetCloseTime).getTime();
@@ -295,12 +295,12 @@ const updateOrderProcess = async (orderId: string, status: string) => {
             WHERE order_id = ?                  
         `,
         [orderId]
-    )
+    );
 
     // update food quantity if order failed
     if (status == "failed") {            
         for (let i = 0; i < orderDetailResult.length; i++) {
-            let orderDetail = orderDetailResult[i];
+            const orderDetail = orderDetailResult[i];
 
             await pool.query(
                 `                
@@ -332,7 +332,7 @@ const updateOrderProcess = async (orderId: string, status: string) => {
     );
 
     for (let i = 0; i < orderDetailResult.length; i++) {
-        let orderDetailId = orderDetailResult[i].id;
+        const orderDetailId = orderDetailResult[i].id;
 
         // insert to order history detail
         await pool.query(
@@ -363,7 +363,7 @@ const updateOrderProcess = async (orderId: string, status: string) => {
         `,
         [orderId]
     );
-}
+};
 
 export const getAllOrderHistory = async (req: Request, res: Response) => {
     try {
@@ -450,9 +450,9 @@ export const getAllSuccessfulOrderHistory = async (req: Request, res: Response) 
                     WHERE order_history_id = ?
                 `,
                 [orderHistoryRow.id]
-            )
+            );
             for (const orderHistoryDetailRow of orderHistoryDetailRows) {
-                console.log(orderHistoryDetailRow)
+                console.log(orderHistoryDetailRow);
                 // search food name
                 const [foodRows] = await pool.query<Food[]>(
                     `
@@ -461,12 +461,12 @@ export const getAllSuccessfulOrderHistory = async (req: Request, res: Response) 
                         WHERE id = ?
                     `,
                     [orderHistoryDetailRow.food_id]
-                )
+                );
 
-                let foodDetail : FoodDetail = {
+                const foodDetail : FoodDetail = {
                     id: orderHistoryDetailRow.food_id,
                     name: foodRows[0].name
-                }
+                };
                 foodDetailList.push(foodDetail);
             }
             
