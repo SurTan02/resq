@@ -7,6 +7,8 @@ export interface Restaurant {
     id?: string;
     name: string;
     address: string;
+    latitude: number;
+    longitude: number;
     phone_number: string;
     rating: number;
     open_time: string;
@@ -15,15 +17,23 @@ export interface Restaurant {
 
 export const createRestaurant = async (req: Request, res: Response) => {
     const id = uuidv4();
-    const { name, address, phone_number, rating, open_time, close_time }: Restaurant = req.body;
+    const { 
+        name, 
+        address, 
+        latitude,
+        longitude,
+        phone_number, 
+        rating, 
+        open_time, 
+        close_time }: Restaurant = req.body;
 
     const query = `
-        INSERT INTO RESTAURANT (id, name, address, phone_number, rating, open_time, close_time) 
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO RESTAURANT (id, name, address, latitude, longitude, phone_number, rating, open_time, close_time) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     try {
-        await pool.query(query, [id, name, address, phone_number, rating, open_time, close_time]);
+        await pool.query(query, [id, name, address, latitude, longitude, phone_number, rating, open_time, close_time]);
         res.status(201).json({ message: "Restaurant added successfully", restaurantId: id });
     } catch (error) {
         console.error("Error adding restaurant:", error);
