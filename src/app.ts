@@ -15,7 +15,7 @@ app.use(cors({
 }));
 
 app.get("/", (_req, res) => {
-    res.send("Foodresq api");
+    res.send("Foodresq API v1");
 });
 
 app.use(express.json());
