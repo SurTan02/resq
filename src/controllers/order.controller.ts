@@ -129,19 +129,21 @@ export const placeOrder = async (req: Request, res: Response) => {
         const openTimeStr = pickupTimeResult[0].open_time;
         const closeTimeStr = pickupTimeResult[0].close_time;
 
+        console.log(`(From DB) Open time restaurant: ${openTimeStr}, Close time restaurant: ${closeTimeStr}`)
+
         const openTimeParts = openTimeStr.split(":");
         const openTimeDate = new Date();
         openTimeDate.setHours(parseInt(openTimeParts[0], 10));
         openTimeDate.setMinutes(parseInt(openTimeParts[1], 10));
         openTimeDate.setSeconds(parseInt(openTimeParts[2], 10));
-        const openTime = openTimeDate.toLocaleTimeString();
+        const openTime = openTimeDate.toLocaleTimeString("en-US", { hour12: false });
 
         const closeTimeParts = closeTimeStr.split(":");
         const closeTimeDate = new Date();
         closeTimeDate.setHours(parseInt(closeTimeParts[0], 10));
         closeTimeDate.setMinutes(parseInt(closeTimeParts[1], 10));
         closeTimeDate.setSeconds(parseInt(closeTimeParts[2], 10));
-        const closeTime = closeTimeDate.toLocaleTimeString();
+        const closeTime = closeTimeDate.toLocaleTimeString("en-US", { hour12: false });
 
         console.log(`Current time: ${time}`)
         console.log(`Open time restaurant: ${openTime}, Close time restaurant: ${closeTime}`);
