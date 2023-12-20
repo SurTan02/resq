@@ -47,8 +47,8 @@ export const migration = async () => {
                 longitude float(10,6) not null,
                 phone_number varchar(255) not null,
                 rating decimal(2,1) not null,
-                open_time time not null,
-                close_time time not null,
+                open_time varchar(20) not null,
+                close_time varchar(20) not null,
                 primary key (id)
             )
         `
