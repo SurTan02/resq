@@ -9,14 +9,14 @@ export const register = async (req: Request, res: Response) => {
     try {
         const { email, password, name } = req.body;
         
-        const [isEmailUsed] = await pool.query(
+        const [isEmailUsed] = await pool.query<RowDataPacket[]>(
             "SELECT email from USER where email = ?",
             [email]
         );
-
-        if (isEmailUsed){
+        
+        if (isEmailUsed.length > 0){
             return res.status(400).send({
-                message: "Email already in use"
+                message: "Email already used"
             });
         }
         
@@ -24,7 +24,7 @@ export const register = async (req: Request, res: Response) => {
         const id = uuidv4();
 
         await pool.query(
-            "INSERT INTO User (id, name, email, password) VALUE (?, ?, ?, ?)",
+            "INSERT INTO USER (id, name, email, password) VALUE (?, ?, ?, ?)",
             [id, name, email, hashedPassword]
         );
   
@@ -48,7 +48,7 @@ export const login = async (req: Request, res: Response) => {
 
         if (!users || users.length === 0){
             return res.status(401).send({
-                message: "Invalid Credential"
+                message: "Invalid credential"
             });
         }
 
@@ -56,7 +56,7 @@ export const login = async (req: Request, res: Response) => {
         const validPassword = await bcrypt.compare(password, users[0].password);
         if (!validPassword) {
             return res.status(401).send({
-                message: "Invalid credentials"
+                message: "Invalid credential"
             });
         }
         
@@ -70,7 +70,7 @@ export const login = async (req: Request, res: Response) => {
             { expiresIn: "1h" }
         );
 
-        res.status(201).json({
+        res.status(200).json({
             message: "Success",
             token: accessToken
         });
